@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Trivia del Desierto - Desafío Educativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #1c1008 0%, #431407 40%, #78350f 80%, #2e1005 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 20, 15, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+        .option-btn {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 text-white relative overflow-x-hidden min-h-screen">
+
+    <!-- Desert Background Silhouettes -->
+    <div class="fixed bottom-0 left-0 w-full pointer-events-none opacity-20 flex justify-between items-end px-4 z-0">
+        <i class="fa-solid fa-sun text-amber-500 text-9xl -mb-10 -ml-10 blur-sm"></i>
+        <i class="fa-solid fa-dungeon text-amber-700 text-8xl -mb-4"></i>
+    </div>
+
+    <div class="w-full max-w-2xl z-10 my-6">
+        <!-- Main Card Container -->
+        <div class="glass-card rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+            
+            <!-- Header Section -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-amber-500/20">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-amber-600/30 rounded-2xl border border-amber-500/40 text-amber-400">
+                        <i class="fa-solid fa-sun text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-orange-300 to-amber-500">
+                            ¡Demostrá lo aprendido!
+                        </h1>
+                        <p class="text-xs text-amber-200/70">Trivia Interactiva del Bioma Desierto</p>
+                    </div>
+                </div>
+                
+                <!-- Score & Progress -->
+                <div class="text-right">
+                    <div class="text-xs uppercase tracking-wider text-amber-200/60 font-semibold">PUNTOS</div>
+                    <div id="score" class="text-2xl font-black text-amber-400">0</div>
+                </div>
+            </div>
+
+            <!-- QUIZ SCREEN -->
+            <div id="quiz-screen" class="space-y-6">
+                <!-- Progress Bar -->
+                <div>
+                    <div class="flex justify-between text-xs text-amber-200/70 mb-2 font-medium">
+                        <span id="question-number">Pregunta 1 de 8</span>
+                        <span id="progress-percent">13%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-black/40 rounded-full overflow-hidden p-0.5 border border-amber-500/20">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-600 via-orange-500 to-amber-400 rounded-full transition-all duration-500 w-1/8"></div>
+                    </div>
+                </div>
+
+                <!-- Question Box -->
+                <div class="min-h-[90px] flex items-center justify-center py-2 px-2 text-center">
+                    <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-amber-50 leading-snug">
+                        Cargando pregunta...
+                    </h2>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="grid gap-3.5">
+                    <!-- Options populated by JS -->
+                </div>
+
+                <!-- Feedback & Next Button Area -->
+                <div id="feedback-panel" class="hidden mt-6 p-4 rounded-2xl border transition-all">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div id="feedback-message" class="font-semibold text-sm md:text-base flex items-center gap-2 text-left w-full sm:w-auto"></div>
+                        <button id="next-btn" onclick="nextQuestion()" class="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-400 font-bold rounded-xl text-sm transition shadow-lg flex items-center justify-center gap-2 text-amber-950 font-extrabold cursor-pointer">
+                            <span>Siguiente</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULT SCREEN (Hidden by default) -->
+            <div id="result-screen" class="hidden text-center py-4 space-y-6">
+                <div class="inline-flex p-5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-400 mb-1 pulse-glow">
+                    <i id="result-icon" class="fa-solid fa-trophy text-5xl"></i>
+                </div>
+                
+                <div>
+                    <h2 id="result-title" class="text-3xl font-extrabold text-white">¡Desafío Completado!</h2>
+                    <p id="result-subtitle" class="text-amber-200/70 text-sm mt-1">Has demostrado tus conocimientos sobre el desierto</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 max-w-sm mx-auto space-y-2">
+                    <div class="text-amber-300/70 text-xs font-semibold uppercase tracking-wider">Puntuación Final</div>
+                    <div id="final-score" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-500">
+                        0/8
+                    </div>
+                    <div id="result-percentage" class="text-sm font-medium text-amber-100">
+                        Efectividad: 0%
+                    </div>
+                </div>
+
+                <!-- Project Authors Acknowledgement -->
+                <div class="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/20 text-xs text-amber-200/80 max-w-md mx-auto">
+                    <p class="font-semibold text-amber-300 mb-1"><i class="fa-solid fa-graduation-cap"></i> Presentación de Bioma Desierto</p>
+                    <p>Hecho por: <strong>Evans Atamari, Ciro Lujan, Dylan Victoria y Valentino Castillo</strong></p>
+                    <p class="text-amber-400/90 font-bold mt-1">"¡Profe ponenos 10! ⭐"</p>
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="restartQuiz()" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 font-extrabold text-amber-950 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Intentar de Nuevo</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Native Web Audio API Synthesizer (No external library dependency)
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playCorrectSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                
+                // Tone 1
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(659.25, now); // E5
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                // Tone 2
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(783.99, now + 0.1); // G5
+                gain2.gain.setValueAtTime(0.25, now + 0.1);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.1);
+                osc2.stop(now + 0.3);
+            } catch (e) { console.log('Audio error:', e); }
+        }
+
+        function playWrongSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } catch (e) { console.log('Audio error:', e); }
+        }
+
+        // Desert Questions extracted directly from PDF content
+        const questions = [
+            {
+                question: "¿Dónde se ubica el bioma del desierto?",
+                options: [
+                    { text: "En zonas áridas y semiáridas de África, Asia, América, Oceanía, Europa y Antártida", correct: true },
+                    { text: "Únicamente en las selvas tropicales y zonas costeras de América del Sur", correct: false },
+                    { text: "Exclusivamente alrededor del ecuador en el continente asiático", correct: false }
+                ]
+            },
+            {
+                question: "¿Cómo es el clima en el desierto?",
+                options: [
+                    { text: "Templado constante con lluvias moderadas a lo largo de todas las estaciones", correct: false },
+                    { text: "Días muy calurosos, noches frías (0° a 50°C) y lluvias menores a 250 mm al año", correct: true },
+                    { text: "Muy húmedo con precipitaciones torrenciales diarias al atardecer", correct: false }
+                ]
+            },
+            {
+                question: "¿Qué características tiene la flora del desierto?",
+                options: [
+                    { text: "Árboles frutales gigantescos con hojas anchas que absorben mucha sombra", correct: false },
+                    { text: "Bosques tupidos de pinos y helechos que crecen cerca de lagos", correct: false },
+                    { text: "Cactus y arbustos espinosos con raíces muy largas y hojas pequeñas o espinas", correct: true }
+                ]
+            },
+            {
+                question: "¿Cómo logran sobrevivir la mayoría de los animales (fauna) del desierto?",
+                options: [
+                    { text: "Son principalmente nocturnos y obtienen agua de sus alimentos o la almacenan", correct: true },
+                    { text: "Necesitan beber grandes ríos de agua dulce cada dos horas", correct: false },
+                    { text: "Migran hacia los polos fríos durante todo el período del día", correct: false }
+                ]
+            },
+            {
+                question: "¿Cómo es el suelo del desierto según el estudio?",
+                options: [
+                    { text: "Suelo fértil, negro y rico en materia orgánica proveniente de hojas secas", correct: false },
+                    { text: "Suelo pobre, formado por arena y rocas, seco, salino y no retiene agua", correct: true },
+                    { text: "Suelo arcilloso esponjoso que se mantiene inundado todo el tiempo", correct: false }
+                ]
+            },
+            {
+                question: "¿Cuál es el desierto más grande del mundo?",
+                options: [
+                    { text: "El Desierto del Sahara", correct: false },
+                    { text: "El Desierto de la Antártida (desierto polar)", correct: true },
+                    { text: "El Desierto de Gobi", correct: false }
+                ]
+            },
+            {
+                question: "¿Qué animales representativos habitan en los desiertos?",
+                options: [
+                    { text: "Camellos, escorpiones, serpientes de cascabel, coyotes y el zorro fennec", correct: true },
+                    { text: "Osos polares, pingüinos de magallanes y focas de puerto", correct: false },
+                    { text: "Monos aulladores, tucanes, jaguares y delfines rosados", correct: false }
+                ]
+            },
+            {
+                question: "¿Por qué los cactus almacenan agua en sus tallos?",
+                options: [
+                    { text: "Para volverse más pesados y resistir los fuertes vientos marinos", correct: false },
+                    { text: "Para adaptarse a la escasez de agua durante meses en el clima árido", correct: true },
+                    { text: "Para atraer más insectos y flores de colores llamativos durante la noche", correct: false }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOptionIndex = null;
+
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const questionNumber = document.getElementById('question-number');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreElement = document.getElementById('score');
+        const feedbackPanel = document.getElementById('feedback-panel');
+        const feedbackMessage = document.getElementById('feedback-message');
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            questionText.innerText = q.question;
+            
+            const total = questions.length;
+            const currentNum = currentQuestionIndex + 1;
+            const percent = Math.round((currentNum / total) * 100);
+            
+            questionNumber.innerText = `Pregunta ${currentNum} de ${total}`;
+            progressPercent.innerText = `${percent}%`;
+            progressBar.style.width = `${percent}%`;
+
+            optionsContainer.innerHTML = '';
+            feedbackPanel.classList.add('hidden');
+            selectedOptionIndex = null;
+
+            q.options.forEach((opt, idx) => {
+                const button = document.createElement('button');
+                button.className = `option-btn w-full p-4 text-left rounded-2xl bg-amber-950/40 border border-amber-500/20 hover:bg-amber-900/40 hover:border-amber-500/50 flex items-center justify-between text-amber-100 text-sm md:text-base font-medium cursor-pointer`;
+                button.onclick = () => selectOption(idx);
+                
+                button.innerHTML = `
+                    <span class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-300 border border-amber-500/30 flex-shrink-0">
+                            ${String.fromCharCode(65 + idx)}
+                        </span>
+                        <span>${opt.text}</span>
+                    </span>
+                    <i class="fa-regular fa-circle text-amber-500/40 text-lg icon-status flex-shrink-0 ml-2"></i>
+                `;
+                
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(index) {
+            if (selectedOptionIndex !== null) return;
+            
+            initAudio();
+
+            selectedOptionIndex = index;
+            const q = questions[currentQuestionIndex];
+            const isCorrect = q.options[index].correct;
+            const buttons = optionsContainer.children;
+
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+                buttons[i].style.cursor = 'default';
+                const icon = buttons[i].querySelector('.icon-status');
+                
+                if (q.options[i].correct) {
+                    buttons[i].className = "option-btn w-full p-4 text-left rounded-2xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-between text-emerald-200 text-sm md:text-base font-semibold";
+                    icon.className = "fa-solid fa-circle-check text-emerald-400 text-lg flex-shrink-0 ml-2";
+                } else if (i === index && !isCorrect) {
+                    buttons[i].className = "option-btn w-full p-4 text-left rounded-2xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-between text-rose-200 text-sm md:text-base font-semibold";
+                    icon.className = "fa-solid fa-circle-xmark text-rose-400 text-lg flex-shrink-0 ml-2";
+                } else {
+                    buttons[i].className += " opacity-40";
+                }
+            }
+
+            if (isCorrect) {
+                score += 100;
+                scoreElement.innerText = score;
+                playCorrectSound();
+                showFeedback(true, "¡Correcto! Excelente respuesta.");
+            } else {
+                playWrongSound();
+                showFeedback(false, "Incorrecto. La opción en verde es la adecuada.");
+            }
+        }
+
+        function showFeedback(isCorrect, message) {
+            feedbackPanel.classList.remove('hidden');
+            if (isCorrect) {
+                feedbackPanel.className = "mt-6 p-4 rounded-2xl border bg-emerald-950/50 border-emerald-500/40 text-emerald-300";
+                feedbackMessage.innerHTML = `<i class="fa-solid fa-circle-check text-xl text-emerald-400"></i> <span>${message}</span>`;
+            } else {
+                feedbackPanel.className = "mt-6 p-4 rounded-2xl border bg-rose-950/50 border-rose-500/40 text-rose-300";
+                feedbackMessage.innerHTML = `<i class="fa-solid fa-circle-exclamation text-xl text-rose-400"></i> <span>${message}</span>`;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const correctCount = score / 100;
+            const totalQuestions = questions.length;
+            const percentage = Math.round((correctCount / totalQuestions) * 100);
+
+            document.getElementById('final-score').innerText = `${correctCount}/${totalQuestions}`;
+            document.getElementById('result-percentage').innerText = `Efectividad: ${percentage}% (${score} pts)`;
+
+            const resultTitle = document.getElementById('result-title');
+            const resultSubtitle = document.getElementById('result-subtitle');
+            const resultIcon = document.getElementById('result-icon');
+
+            if (percentage >= 80) {
+                resultTitle.innerText = "¡Experto del Desierto!";
+                resultSubtitle.innerText = "¡Dominas a la perfección todo sobre el bioma desértico!";
+                resultIcon.className = "fa-solid fa-award text-5xl text-amber-400";
+            } else if (percentage >= 50) {
+                resultTitle.innerText = "¡Buen Trabajo!";
+                resultSubtitle.innerText = "Tienes un conocimiento sólido sobre el clima, flora y fauna.";
+                resultIcon.className = "fa-solid fa-compass text-5xl text-amber-300";
+            } else {
+                resultTitle.innerText = "¡A Repasar el PDF!";
+                resultSubtitle.innerText = "El desierto es exigente, ¡vuelve a intentarlo para conseguir el 10!";
+                resultIcon.className = "fa-solid fa-book-open text-5xl text-orange-400";
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.innerText = '0';
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        window.onload = function() {
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
